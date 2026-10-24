@@ -7,11 +7,13 @@ const {
   isReviewAuthor,
 } = require("../middleware.js");
 const ReviewController = require("../controllers/review.js");
+const { verifyCsrf } = require("../utils/csrf.js");
 
 //Reviews post route
 router.post(
   "/",
   isloggedIn,
+  verifyCsrf,
   validateReview,
   wrapAsync(ReviewController.createReview),
 );
@@ -20,6 +22,7 @@ router.post(
 router.delete(
   "/:reviewId",
   isloggedIn,
+  verifyCsrf,
   isReviewAuthor,
   wrapAsync(ReviewController.deleteReview),
 );

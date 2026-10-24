@@ -38,6 +38,7 @@
                 <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark edit-btn">Edit</a>
 
                 <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button class="btn btn-outline-danger">Delete</button>
                 </form>
             </div>
@@ -53,7 +54,7 @@
 
                         <form action="/listings/<%= listing._id %>/reviews" method="POST" class="needs-validation"
                             novalidate>
-
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                             <div class="mb-2">
                                 <label class="form-label">Rating</label>
 
@@ -110,6 +111,7 @@
                                                         currUser._id.equals(review.author._id)) { %>
                                                         <form class="mt-auto" method="POST"
                                                             action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
+                                                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                             <button class="btn btn-sm btn-outline-danger">
                                                                 Delete
                                                             </button>

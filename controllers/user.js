@@ -1,4 +1,5 @@
 const User = require("../models/user.js");
+const { signupSchema } = require("../schema.js");
 
 module.exports.signupForm = (req, res) => {
   res.render("users/signup.ejs");
@@ -6,7 +7,12 @@ module.exports.signupForm = (req, res) => {
 
 module.exports.signup = async (req, res, next) => {
   try {
-    let { username, email, password } = req.body;
+    const { error, value } = signupSchema.validate(req.body);
+    if (error) {
+      req.flash("error", error.details[0].message);
+      return res.redirect("/signup");
+    }
+    const { username, email, password } = value;
     let newUser = new User({ username, email });
     let registeredUser = await User.register(newUser, password);
     req.login(registeredUser, (err) => {
@@ -17,8 +23,11 @@ module.exports.signup = async (req, res, next) => {
       res.redirect("/listings");
     });
   } catch (e) {
-    req.flash("error", e.message);
-    res.redirect("/signup");
+    if (e.name === "UserExistsError") {
+      req.flash("error", "Username already exists!");
+      return res.redirect("/signup");
+    }
+    return next(e);
   }
 };
 

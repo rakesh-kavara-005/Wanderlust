@@ -14,6 +14,7 @@ const upload = multer({
     cb(null, true);
   },
 });
+const { verifyCsrf } = require("../utils/csrf.js");
 
 //Index Route ,Create Route
 router
@@ -22,6 +23,7 @@ router
   .post(
     isloggedIn,
     upload.single("listing[image]"),
+    verifyCsrf,
     validateListing,
     wrapAsync(ListingController.createListing),
   );
@@ -37,10 +39,16 @@ router
     isloggedIn,
     isOwner,
     upload.single("listing[image]"),
+    verifyCsrf,
     validateListing,
     wrapAsync(ListingController.updateListing),
   )
-  .delete(isloggedIn, isOwner, wrapAsync(ListingController.deleteListing));
+  .delete(
+    isloggedIn,
+    verifyCsrf,
+    isOwner,
+    wrapAsync(ListingController.deleteListing),
+  );
 
 //Edit Route
 router.get(

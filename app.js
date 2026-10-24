@@ -4,6 +4,7 @@ if (process.env.NODE_ENV !== "production") {
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
+const { generateToken } = require("./utils/csrf.js");
 const path = require("path");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
@@ -36,7 +37,14 @@ async function main() {
 }
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-app.use(express.urlencoded({ extended: true }));
+app.use(
+  express.urlencoded({
+    extended: true,
+    inflate: false,
+    limit: "100kb",
+    parameterLimit: 100,
+  }),
+);
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
 app.engine("ejs", ejsMate);
@@ -60,6 +68,7 @@ const sessionOptions = {
   cookie: {
     maxAge: 7 * 24 * 60 * 60 * 1000,
     httpOnly: true,
+    sameSite: "lax",
   },
 };
 if (process.env.NODE_ENV === "production") {
@@ -67,6 +76,10 @@ if (process.env.NODE_ENV === "production") {
   sessionOptions.cookie.secure = true;
 }
 app.use(session(sessionOptions));
+app.use((req, res, next) => {
+  res.locals.csrfToken = generateToken(req);
+  next();
+});
 app.use(flash());
 
 app.use(passport.initialize());
@@ -96,6 +109,10 @@ app.all("/{*splat}", (req, res, next) => {
 
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
+  if (err.name === "CastError" && err.kind === "ObjectId") {
+    err.statusCode = 400;
+    err.message = "Invalid listing or review ID.";
+  }
   if (err.code === "LIMIT_FILE_SIZE") {
     err.statusCode = 400;
     err.message = "Image must be smaller than 10 MB!";
